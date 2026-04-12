@@ -145,3 +145,25 @@
 
 ### Stuck
 - No new blockers; existing Supabase credential blocker remains unchanged.
+
+## 2026-04-12 01:04 PM CDT
+### Done
+- Deployed latest build to Vercel production and aliased to `https://commitrecruit.com` (deployment `dpl_39Qp3mPLggK4zkqXvaksenDQHYty`).
+- Detected and resolved production env misconfiguration:
+  - `ADMIN_PASSWORD_COMMIT` (and all other required env vars) were missing in Vercel.
+  - Added `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `RESEND_API_KEY`, `ADMIN_PASSWORD_COMMIT`, `RESEND_FROM`.
+  - Redeployed after env setup.
+- Final production smoke checks:
+  - `GET /` → 200
+  - `GET /demo` → 200
+  - `GET /admin` → 401 (expected unauthenticated)
+  - `GET /admin` with `admin:$ADMIN_PASSWORD_COMMIT` → 200
+  - `GET /api/admin/export` with auth → 200 + CSV rows
+  - `POST /api/generate-report` → 200 + structured report JSON
+  - `POST /api/waitlist` → 200 + success payload (`storageMode: fallback`)
+
+### Next
+- Final handoff summary to Joe/Luna.
+
+### Stuck
+- No new blockers; Supabase direct schema-apply credential issue remains the only outstanding infrastructure constraint.
