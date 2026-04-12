@@ -20,8 +20,7 @@ function relationMissing(error: PostgrestError | null) {
   }
   return (
     error.code === "42P01" ||
-    error.message.toLowerCase().includes("could not find the table") ||
-    error.message.toLowerCase().includes("does not exist")
+    error.message.toLowerCase().includes("could not find the table")
   );
 }
 
@@ -88,10 +87,10 @@ async function insertIntoFallback(
     .like("source", `${FALLBACK_PREFIX}%`);
 
   if (countError) {
-    return 0;
+    return 1;
   }
 
-  return count ?? 0;
+  return Math.max(count ?? 1, 1);
 }
 
 export async function insertWaitlistEntry(supabase: SupabaseClient, payload: WaitlistInput) {
@@ -111,7 +110,7 @@ export async function insertWaitlistEntry(supabase: SupabaseClient, payload: Wai
     const { count, error: countError } = await supabase
       .from("waitlist")
       .select("id", { count: "exact", head: true });
-    return { position: countError ? 0 : (count ?? 0), storageMode: "waitlist" as const };
+    return { position: countError ? 1 : Math.max(count ?? 1, 1), storageMode: "waitlist" as const };
   }
 
   if (!relationMissing(insertPrimary.error)) {

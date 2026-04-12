@@ -94,3 +94,18 @@
 
 ### Stuck
 - No new blockers.
+
+## 2026-04-12 12:20 PM CDT
+### Done
+- Ran second Codex review pass on patched files and addressed remaining findings.
+- Redeployed production with hardening updates.
+- Final smoke checks on `commitrecruit.com` after latest deploy:
+  - `GET /` → 200
+  - `GET /admin` → 401 without auth
+  - `POST /api/waitlist` → success + valid non-zero queue position
+
+### Next
+- Final handoff sent.
+
+### Stuck
+- No new blockers.
