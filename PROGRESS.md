@@ -244,3 +244,52 @@
 ### Stuck
 
 - Same single blocker: cannot complete SQL schema apply with current stale `SUPABASE_DB_URL`.
+
+## 2026-04-12 04:24 PM CDT
+
+### Done
+
+- Added schools ingestion support to the MVP so programs can be loaded as soon as schema access is available:
+  - New admin API `POST /api/admin/programs` for bulk school upserts into `programs`.
+  - New admin API `GET /api/admin/programs` for schools list + count verification.
+  - New admin API `POST /api/admin/programs/seed` to load a curated starter set across D1/D2/D3/NAIA/JUCO.
+  - Added reusable normalization/upsert helpers in `lib/programs.ts`.
+  - Added starter dataset in `lib/school-seed.ts`.
+  - Updated admin dashboard to show school count + recent schools table.
+  - Updated README with schools import endpoints and curl examples.
+- Confirmed current production database still returns `PGRST205` for `public.programs` (table not in schema cache yet), so imports are code-complete but waiting on schema apply.
+
+### Next
+
+- Apply `supabase/schema.sql` with valid SQL credentials.
+- Run `POST /api/admin/programs/seed` in production, then verify `/admin` schools widget and `/api/admin/programs`.
+
+### Stuck
+
+- Same root blocker: live SQL credential path is still invalid/stale, so `programs` table cannot be created yet in Supabase.
+
+## 2026-04-12 04:31 PM CDT
+
+### Done
+
+- Deployed schools-ingestion update to production:
+  - Deployment: `dpl_9u6wwZdrofwY2LEAXKMY5LwhcbhU`
+  - Aliased to: `https://commitrecruit.com`
+- Confirmed new endpoints are live and authenticated:
+  - `GET /api/admin/programs` with admin auth → `409` (expected while table missing)
+  - `POST /api/admin/programs` with valid payload + admin auth → `409` (expected while table missing)
+  - `POST /api/admin/programs/seed` with admin auth → `409` (expected while table missing)
+  - Error payload is explicit and actionable: `"Programs table is not available yet. Apply supabase/schema.sql first."`
+- Re-verified admin gate integrity after deploy:
+  - `/admin` unauthenticated → 401
+  - `/admin` with basic auth `admin:$ADMIN_PASSWORD_COMMIT` → 200
+
+### Next
+
+- As soon as SQL credentials are refreshed, apply `supabase/schema.sql`.
+- Immediately run `POST /api/admin/programs/seed` to load initial school dataset.
+- Verify school count appears in `/admin` and `GET /api/admin/programs` returns rows.
+
+### Stuck
+
+- Still blocked solely by SQL credential validity for schema apply.

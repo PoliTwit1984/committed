@@ -62,6 +62,33 @@ export const demoRequestSchema = z
 export type DemoRequestInput = z.output<typeof demoRequestSchema>;
 export type DemoRequestFormInput = z.input<typeof demoRequestSchema>;
 
+const optionalTrimmedText = z.string().trim().max(250).optional().default("");
+
+export const programInputSchema = z.object({
+  name: z.string().trim().min(2, "Program name is required.").max(160),
+  division: optionalTrimmedText,
+  conference: optionalTrimmedText,
+  city: optionalTrimmedText,
+  state: optionalTrimmedText,
+  country: z.string().trim().max(100).optional().default("USA"),
+  rosterSize: z.number().int().min(1).max(120).optional(),
+  scholarshipLimit: z.number().min(0).max(40).optional(),
+  website: z.url("Use a valid program website URL.").optional().or(z.literal("")),
+  source: z.string().trim().max(120).optional().default("manual"),
+  sourceUrl: z.url("Use a valid source URL.").optional().or(z.literal("")),
+});
+
+export const programImportSchema = z.object({
+  programs: z
+    .array(programInputSchema)
+    .min(1, "At least one school is required.")
+    .max(500, "Import up to 500 schools per request."),
+});
+
+export type ProgramInput = z.input<typeof programInputSchema>;
+export type ProgramImportInput = z.input<typeof programImportSchema>;
+export type ProgramParsedInput = z.output<typeof programInputSchema>;
+
 export const generatedReportSchema = z.object({
   targetSchoolTier: z.object({
     recommendedTier: z.string().min(2),

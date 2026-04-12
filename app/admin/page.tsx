@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 import { hasSupabaseServerEnv } from "@/lib/env";
 import { getRecentWaitlistRows, getWaitlistCount } from "@/lib/waitlist-store";
+import { getProgramsCount, getRecentPrograms, relationMissing } from "@/lib/programs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -30,16 +31,14 @@ type DemoItem = {
   created_at: string;
 };
 
-function missingRelation(errorMessage?: string) {
-  if (!errorMessage) {
-    return false;
-  }
-  return (
-    errorMessage.toLowerCase().includes("could not find the table") ||
-    errorMessage.toLowerCase().includes("relation") ||
-    errorMessage.toLowerCase().includes("does not exist")
-  );
-}
+type ProgramItem = {
+  name: string;
+  division: string | null;
+  conference: string | null;
+  city: string | null;
+  state: string | null;
+  created_at: string;
+};
 
 function formatDate(value: string) {
   const parsed = new Date(value);
@@ -63,7 +62,14 @@ export default async function AdminPage() {
 
   const supabase = createSupabaseAdminClient();
 
-  const [waitlistCount, waitlistRows, demoCountResult, demoRowsResult] = await Promise.all([
+  const [
+    waitlistCount,
+    waitlistRows,
+    demoCountResult,
+    demoRowsResult,
+    programsCountResult,
+    programsRowsResult,
+  ] = await Promise.all([
     getWaitlistCount(supabase),
     getRecentWaitlistRows(supabase, 20),
     supabase.from("demo_reports").select("id", { count: "exact", head: true }),
@@ -72,19 +78,33 @@ export default async function AdminPage() {
       .select("player_name,grad_year,position,created_at")
       .order("created_at", { ascending: false })
       .limit(10),
+    getProgramsCount(supabase),
+    getRecentPrograms(supabase, 10),
   ]);
 
   const demoCount = demoCountResult.error
-    ? missingRelation(demoCountResult.error.message)
+    ? relationMissing(demoCountResult.error.message)
       ? 0
       : 0
     : (demoCountResult.count ?? 0);
 
   const demoRows = demoRowsResult.error
-    ? missingRelation(demoRowsResult.error.message)
+    ? relationMissing(demoRowsResult.error.message)
       ? []
       : []
     : ((demoRowsResult.data ?? []) as DemoItem[]);
+
+  const programsCount = programsCountResult.error
+    ? relationMissing(programsCountResult.error.message)
+      ? 0
+      : 0
+    : (programsCountResult.count ?? 0);
+
+  const programsRows = programsRowsResult.error
+    ? relationMissing(programsRowsResult.error.message)
+      ? []
+      : []
+    : ((programsRowsResult.data ?? []) as ProgramItem[]);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -99,7 +119,7 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="text-primary">Waitlist signups</CardTitle>
@@ -114,6 +134,14 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             <p className="font-heading text-4xl text-foreground">{demoCount ?? 0}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-primary">Schools in database</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-heading text-4xl text-foreground">{programsCount}</p>
           </CardContent>
         </Card>
       </div>
@@ -182,6 +210,46 @@ export default async function AdminPage() {
                       <TableCell>{entry.player_name}</TableCell>
                       <TableCell>{entry.grad_year}</TableCell>
                       <TableCell>{entry.position}</TableCell>
+                      <TableCell>{formatDate(entry.created_at)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mt-8 space-y-4">
+        <h2 className="font-heading text-2xl text-primary">Recent schools</h2>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>School</TableHead>
+                  <TableHead>Division</TableHead>
+                  <TableHead>Conference</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {programsRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      No schools loaded yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  programsRows.map((entry) => (
+                    <TableRow key={`${entry.name}-${entry.created_at}`}>
+                      <TableCell>{entry.name}</TableCell>
+                      <TableCell>{entry.division ?? "—"}</TableCell>
+                      <TableCell>{entry.conference ?? "—"}</TableCell>
+                      <TableCell>
+                        {[entry.city, entry.state].filter(Boolean).join(", ") || "—"}
+                      </TableCell>
                       <TableCell>{formatDate(entry.created_at)}</TableCell>
                     </TableRow>
                   ))

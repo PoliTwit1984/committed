@@ -57,3 +57,23 @@
 ### Conclusion
 
 - The blocker is definitively credential-level for SQL access, not application code and not Supabase project availability.
+
+## 2026-04-12 04:24 PM CDT — Schools Import Dependency
+
+### New dependency introduced
+
+- Schools import endpoints are now implemented (`/api/admin/programs`, `/api/admin/programs/seed`), but they depend on `public.programs`.
+- Live Supabase currently returns:
+  - `PGRST205: Could not find the table 'public.programs' in the schema cache`
+
+### Operational impact
+
+- Code path is ready to ingest schools.
+- Production ingestion cannot run until `supabase/schema.sql` is applied through SQL credentials.
+
+### Runtime verification
+
+- `GET /api/admin/programs` now responds `409` with a precise migration message while the table is absent.
+- `POST /api/admin/programs` now responds `409` with the same migration guidance.
+- `POST /api/admin/programs/seed` now responds `409` with the same guidance.
+- This confirms the feature is deployed and waiting only on schema creation.

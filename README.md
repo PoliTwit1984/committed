@@ -60,6 +60,8 @@ Optional:
 - `lib/phase2-context.ts`: Phase 2 data-moat table query layer with graceful empty-table fallback
 - `app/admin/page.tsx`: dashboard metrics + recent records
 - `app/api/admin/export/route.ts`: CSV export endpoint
+- `app/api/admin/programs/route.ts`: schools API (GET list/count + POST bulk upsert)
+- `app/api/admin/programs/seed/route.ts`: one-click starter school seed (D1/D2/D3/NAIA/JUCO sample set)
 - `middleware.ts`: basic auth gate for admin routes (`admin:<ADMIN_PASSWORD_COMMIT>`)
 - `supabase/schema.sql`: canonical table schema for `waitlist` and `demo_reports`
   plus Phase 2-ready empty tables: `programs`, `coaches`, `program_needs`, `commitments`, `showcases`, `showcase_outcomes`, `hs_players`
@@ -86,6 +88,11 @@ Optional:
 - Report generation now attempts to read Phase 2 moat tables first.
 - If those tables are empty or absent, the API automatically falls back to generalized recruiting heuristics.
 - This keeps Phase 2 integration plug-and-play once crawlers begin populating data.
+- Schools ingestion is now wired:
+  - `POST /api/admin/programs/seed` imports a starter school set.
+  - `POST /api/admin/programs` imports custom schools in bulk.
+  - `GET /api/admin/programs` returns current schools + count for verification.
+  - Admin dashboard now shows school count and recent schools.
 
 ## Deploy (Production)
 ```bash
@@ -106,4 +113,6 @@ curl -X POST http://localhost:4100/api/generate-report -H 'Content-Type: applica
 
 curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/admin
 curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/api/admin/export
+curl -u "admin:$ADMIN_PASSWORD_COMMIT" -X POST http://localhost:4100/api/admin/programs/seed
+curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/api/admin/programs
 ```
