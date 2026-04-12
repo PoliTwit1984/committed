@@ -77,3 +77,21 @@
 - `POST /api/admin/programs` now responds `409` with the same migration guidance.
 - `POST /api/admin/programs/seed` now responds `409` with the same guidance.
 - This confirms the feature is deployed and waiting only on schema creation.
+
+## 2026-04-12 04:58 PM CDT - Schools DB Write Still Blocked
+
+### Current state
+
+- Schools API and admin dashboard support are deployed to `https://commitrecruit.com` and live.
+- Runtime responds correctly, but insertion is blocked on missing `public.programs`.
+
+### Blocking cause (confirmed)
+
+- SQL connection string currently available in secrets fails with:
+  - `FATAL: Tenant or user not found`
+- Supabase REST is reachable, but no SQL execution endpoint is exposed in this project's REST surface.
+- Without valid Postgres SQL access, table creation from `supabase/schema.sql` cannot be executed.
+
+### Immediate unblock needed
+
+- Fresh working Postgres connection string for this Supabase project, or equivalent direct SQL credential path.

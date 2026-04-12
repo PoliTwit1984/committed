@@ -293,3 +293,26 @@
 ### Stuck
 
 - Still blocked solely by SQL credential validity for schema apply.
+
+## 2026-04-12 04:58 PM CDT
+
+### Done
+
+- Committed and deployed schools reliability fixes:
+  - Commit: `90bda67` (`fix: harden schools query handling and normalized keys`)
+  - Deployment: `dpl_9Zs6sYVdooYjcsSmcdm9M7oq5iAN`
+  - Aliased to: `https://commitrecruit.com`
+- Verified live behavior after deploy:
+  - `GET /api/admin/programs` (admin auth) -> `409`
+  - `POST /api/admin/programs/seed` (admin auth) -> `409`
+  - Response body: `"Programs table is not available yet. Apply supabase/schema.sql first."`
+- Confirmed schools ingestion path is fully wired in app/runtime and ready to populate immediately once `public.programs` exists.
+
+### Next
+
+- Apply `supabase/schema.sql` via valid SQL connection.
+- Run `POST /api/admin/programs/seed` and verify non-zero schools count in `/admin`.
+
+### Stuck
+
+- SQL credentials remain invalid for this project's Postgres wire access, so schema cannot be applied yet.
