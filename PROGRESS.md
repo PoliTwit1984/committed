@@ -1,7 +1,9 @@
 # Progress Log
 
 ## 2026-04-12 12:06 PM CDT
+
 ### Done
+
 - Scaffolded Next.js 15 + TypeScript + Tailwind app in `app/` and initialized a dedicated git repo with first scaffold commit.
 - Installed and wired core stack: shadcn/ui, react-hook-form, zod, Supabase, OpenAI, Vercel analytics, and middleware-based admin auth.
 - Implemented full MVP surfaces:
@@ -16,6 +18,7 @@
 - Confirmed app compiles cleanly (`npm run lint`, `npm run build` both passing).
 
 ### Next
+
 - Complete endpoint curl verification pass after Resend/domain updates.
 - Finalize deployment to Vercel production.
 - Attach domains: `commitrecruit.com` and `www.commitrecruit.com`.
@@ -23,11 +26,14 @@
 - Commit phase-by-phase changes.
 
 ### Stuck
+
 - Primary `waitlist`/`demo_reports` tables are not present in the current Supabase schema and direct DB migration using `SUPABASE_DB_URL` fails auth.
 - Implemented a Supabase fallback path for waitlist capture so signups still persist and admin still works while we continue shipping.
 
 ## 2026-04-12 12:12 PM CDT
+
 ### Done
+
 - Re-read `CODEX_SPEC.md` with LIVE UPDATES and aligned implementation:
   - Email provider switched to Resend (no SendGrid).
   - From-address set to `onboarding@resend.dev`.
@@ -47,15 +53,19 @@
   - `FINAL_REPORT.md`
 
 ### Next
+
 - Commit the feature/docs phases.
 - Deploy to Vercel production.
 - Add both production domains and verify they resolve.
 
 ### Stuck
+
 - Same Supabase schema blocker remains (table creation path blocked by DB URL auth).
 
 ## 2026-04-12 12:12 PM CDT
+
 ### Done
+
 - Deployed production build to Vercel.
 - Added domains:
   - `commitrecruit.com`
@@ -70,13 +80,17 @@
   - `GET https://commitrecruit.com/api/admin/export` with auth → CSV output
 
 ### Next
+
 - Final summary handoff.
 
 ### Stuck
+
 - No new blockers. Existing Supabase schema blocker remains documented and mitigated.
 
 ## 2026-04-12 12:17 PM CDT
+
 ### Done
+
 - Ran mandatory Codex review gate (`scripts/core/codex-review.sh`) and addressed all flagged issues:
   - Hardened CSV export against formula injection.
   - Decoupled optional env loading from required Supabase env so report generation remains optional-persistence safe.
@@ -90,13 +104,17 @@
   - `POST /api/generate-report` returns success with 3 recommendations
 
 ### Next
+
 - Final handoff summary.
 
 ### Stuck
+
 - No new blockers.
 
 ## 2026-04-12 12:20 PM CDT
+
 ### Done
+
 - Ran second Codex review pass on patched files and addressed remaining findings.
 - Redeployed production with hardening updates.
 - Final smoke checks on `commitrecruit.com` after latest deploy:
@@ -105,13 +123,17 @@
   - `POST /api/waitlist` → success + valid non-zero queue position
 
 ### Next
+
 - Final handoff sent.
 
 ### Stuck
+
 - No new blockers.
 
 ## 2026-04-12 12:53 PM CDT
+
 ### Done
+
 - Re-read `CODEX_SPEC.md` Phase 2 vision update and implemented schema-first prep for the data moat path.
 - Added Phase 2 Supabase tables to `supabase/schema.sql` (empty-by-default scaffolding):
   - `programs`, `coaches`, `hs_players`, `program_needs`, `commitments`, `showcases`, `showcase_outcomes`
@@ -122,15 +144,19 @@
 - Updated docs (`README.md`, `DECISIONS.md`) to capture the Phase 2 migration path and behavior.
 
 ### Next
+
 - Run lint/build validation.
 - Commit Phase 2 prep changes.
 - Deploy to Vercel production and re-run live smoke checks on `commitrecruit.com`.
 
 ### Stuck
+
 - No new blockers; existing Supabase credential blocker still applies for direct schema push.
 
 ## 2026-04-12 01:02 PM CDT
+
 ### Done
+
 - Ran Codex review gate on the Phase 2 update batch and addressed findings:
   - Added explicit Supabase insert error handling for `demo_reports` persistence.
   - Updated optional text normalization to avoid silent coercion edge cases.
@@ -139,15 +165,19 @@
 - Re-ran `npm run lint` and `npm run build` after each patch set; both pass.
 
 ### Next
+
 - Commit this Phase 2 + hardening batch.
 - Deploy to Vercel production.
 - Execute live smoke checks against `commitrecruit.com` endpoints.
 
 ### Stuck
+
 - No new blockers; existing Supabase credential blocker remains unchanged.
 
 ## 2026-04-12 01:04 PM CDT
+
 ### Done
+
 - Deployed latest build to Vercel production and aliased to `https://commitrecruit.com` (deployment `dpl_39Qp3mPLggK4zkqXvaksenDQHYty`).
 - Detected and resolved production env misconfiguration:
   - `ADMIN_PASSWORD_COMMIT` (and all other required env vars) were missing in Vercel.
@@ -163,7 +193,54 @@
   - `POST /api/waitlist` → 200 + success payload (`storageMode: fallback`)
 
 ### Next
+
 - Final handoff summary to Joe/Luna.
 
 ### Stuck
+
 - No new blockers; Supabase direct schema-apply credential issue remains the only outstanding infrastructure constraint.
+
+## 2026-04-12 04:00 PM CDT
+
+### Done
+
+- Re-verified production app is healthy and live on `commitrecruit.com` after Phase 2 rollout.
+- Investigated Supabase schema apply blocker deeply:
+  - Confirmed Supabase REST (`SUPABASE_URL` + service role) is healthy and writable.
+  - Confirmed `SUPABASE_DB_URL` authentication is stale/invalid for SQL access (`FATAL: Tenant or user not found` / password auth failure depending on host variant).
+  - Verified no SQL-execution RPC endpoints are exposed in current public schema, so table creation cannot be forced through REST-only paths.
+- Confirmed blocker is now narrowed to one missing input: a valid Postgres connection string/password for the project.
+
+### Next
+
+- As soon as valid DB credentials are supplied, run `psql -f supabase/schema.sql`.
+- Verify canonical tables exist (`waitlist`, `demo_reports`, and all Phase 2 scaffolding tables).
+- Re-run smoke tests and confirm writes move from `storageMode: fallback` to canonical table path.
+
+### Stuck
+
+- Final schema apply is blocked only by invalid/stale `SUPABASE_DB_URL` credentials.
+
+## 2026-04-12 04:13 PM CDT
+
+### Done
+
+- Re-ran live production smoke checks on `https://commitrecruit.com` using the correct route contracts:
+  - `GET /` → 200
+  - `GET /demo` → 200
+  - `GET /admin` (unauthenticated) → 401
+  - `GET /admin` with basic auth `admin:$ADMIN_PASSWORD_COMMIT` → 200
+  - `GET /api/admin/export` with basic auth → 200 (CSV export confirmed with rows)
+  - `POST /api/generate-report` with required schema payload (`playerName`, `gradYear`, `position`, `era` for pitcher) → 200 + report JSON
+  - `POST /api/waitlist` with required schema payload (`email`, `phone`, `playerName`, `gradYear`, `position`) → 200 + success payload (`storageMode: fallback`)
+- Validated that previous 400/401 test results were due to incorrect test payload/header shape, not a production regression.
+- Confirmed current shipped behavior remains stable end-to-end while fallback persistence is active.
+
+### Next
+
+- Apply `supabase/schema.sql` immediately once valid SQL credentials are available.
+- Re-run smoke checks and confirm waitlist writes use canonical `waitlist` table path (non-fallback).
+
+### Stuck
+
+- Same single blocker: cannot complete SQL schema apply with current stale `SUPABASE_DB_URL`.
