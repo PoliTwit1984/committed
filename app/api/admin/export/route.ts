@@ -7,10 +7,13 @@ export const runtime = "nodejs";
 
 function csvEscape(value: unknown) {
   const stringValue = `${value ?? ""}`;
-  if (stringValue.includes(",") || stringValue.includes("\"") || stringValue.includes("\n")) {
-    return `"${stringValue.replaceAll("\"", "\"\"")}"`;
+  const neutralized = /^[\t\r ]*[=+\-@]/.test(stringValue)
+    ? `'${stringValue}`
+    : stringValue;
+  if (neutralized.includes(",") || neutralized.includes("\"") || neutralized.includes("\n")) {
+    return `"${neutralized.replaceAll("\"", "\"\"")}"`;
   }
-  return stringValue;
+  return neutralized;
 }
 
 export async function GET() {

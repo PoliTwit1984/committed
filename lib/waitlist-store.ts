@@ -21,7 +21,6 @@ function relationMissing(error: PostgrestError | null) {
   return (
     error.code === "42P01" ||
     error.message.toLowerCase().includes("could not find the table") ||
-    error.message.toLowerCase().includes("relation") ||
     error.message.toLowerCase().includes("does not exist")
   );
 }

@@ -74,3 +74,23 @@
 
 ### Stuck
 - No new blockers. Existing Supabase schema blocker remains documented and mitigated.
+
+## 2026-04-12 12:17 PM CDT
+### Done
+- Ran mandatory Codex review gate (`scripts/core/codex-review.sh`) and addressed all flagged issues:
+  - Hardened CSV export against formula injection.
+  - Decoupled optional env loading from required Supabase env so report generation remains optional-persistence safe.
+  - Tightened fallback missing-table detection to avoid over-catching unrelated DB errors.
+- Rebuilt and redeployed production after fixes.
+- Re-validated production:
+  - `GET /` and `GET /demo` return 200
+  - `GET /admin` returns 401 without auth
+  - `POST /api/waitlist` returns success
+  - CSV export now neutralizes formula-leading values (`'=...`, `'@...`)
+  - `POST /api/generate-report` returns success with 3 recommendations
+
+### Next
+- Final handoff summary.
+
+### Stuck
+- No new blockers.

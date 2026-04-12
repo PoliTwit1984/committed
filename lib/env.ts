@@ -62,14 +62,21 @@ export function getPublicSupabaseEnv() {
 }
 
 export function getOptionalServerEnv() {
-  const env = getServerEnv();
-
   return {
-    ...env,
-    hasOpenAI: hasValue(env.OPENAI_API_KEY),
-    hasResend: hasValue(env.RESEND_API_KEY),
-    resendFrom: env.RESEND_FROM || "onboarding@resend.dev",
-    hasAdminPassword: hasValue(env.ADMIN_PASSWORD),
+    SUPABASE_URL: process.env.SUPABASE_URL ?? "",
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? "",
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
+    RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
+    RESEND_FROM: process.env.RESEND_FROM ?? "onboarding@resend.dev",
+    ADMIN_PASSWORD:
+      process.env.ADMIN_PASSWORD_COMMIT ?? process.env.ADMIN_PASSWORD ?? "",
+    hasOpenAI: hasValue(process.env.OPENAI_API_KEY),
+    hasResend: hasValue(process.env.RESEND_API_KEY),
+    resendFrom: process.env.RESEND_FROM || "onboarding@resend.dev",
+    hasAdminPassword: hasValue(
+      process.env.ADMIN_PASSWORD_COMMIT ?? process.env.ADMIN_PASSWORD ?? "",
+    ),
   };
 }
 
