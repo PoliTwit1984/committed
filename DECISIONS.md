@@ -28,3 +28,7 @@
 7. **Demo output format**
 - Enforced a strict JSON response shape from GPT-4o and validated it server-side before returning to UI.
 - This avoids markdown parsing errors and guarantees the report renderer receives consistent fields.
+
+8. **Phase 2 schema now, crawlers later**
+- Added empty Supabase tables for the Phase 2 moat (`programs`, `coaches`, `program_needs`, `commitments`, `showcases`, `showcase_outcomes`, `hs_players`) so future ingestion/features can slot in without disruptive migrations.
+- Kept MVP runtime stable by querying these tables opportunistically and falling back to generic recruiting logic when tables are absent or empty.

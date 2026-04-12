@@ -57,10 +57,12 @@ Optional:
 - `app/api/waitlist/route.ts`: validation, Supabase write, Resend confirmation
 - `app/demo/page.tsx` + `components/demo-form.tsx`: demo UI and report rendering
 - `app/api/generate-report/route.ts`: GPT-4o call and optional report persistence
+- `lib/phase2-context.ts`: Phase 2 data-moat table query layer with graceful empty-table fallback
 - `app/admin/page.tsx`: dashboard metrics + recent records
 - `app/api/admin/export/route.ts`: CSV export endpoint
 - `middleware.ts`: basic auth gate for admin routes (`admin:<ADMIN_PASSWORD_COMMIT>`)
 - `supabase/schema.sql`: canonical table schema for `waitlist` and `demo_reports`
+  plus Phase 2-ready empty tables: `programs`, `coaches`, `program_needs`, `commitments`, `showcases`, `showcase_outcomes`, `hs_players`
 
 ## What Was Built
 - Full landing page sections requested in spec (problem/solution/how it works/sample report/pricing)
@@ -74,10 +76,16 @@ Optional:
 - Direct table migration to create `waitlist` and `demo_reports` is blocked by current `SUPABASE_DB_URL` auth failure (`Tenant or user not found`).
 - To keep MVP shippable, waitlist persistence falls back to an existing Supabase table (`sashanoire_subscribers`) when `waitlist` is absent. Admin waitlist views/CSV use the same fallback path.
 - Demo report persistence remains optional per spec; it is attempted, but silently tolerated if `demo_reports` is missing.
+- Phase 2 tables are defined in schema but may not yet exist in the live project until DB credentials are fixed and schema is applied.
 
 ## Resend Migration Note
 - Current from-address is `onboarding@resend.dev` for reliable MVP transactional delivery.
 - Migrate to `hello@commitrecruit.com` once Resend domain verification/billing supports the production domain.
+
+## Phase 2 Prep
+- Report generation now attempts to read Phase 2 moat tables first.
+- If those tables are empty or absent, the API automatically falls back to generalized recruiting heuristics.
+- This keeps Phase 2 integration plug-and-play once crawlers begin populating data.
 
 ## Deploy (Production)
 ```bash

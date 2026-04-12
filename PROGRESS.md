@@ -109,3 +109,39 @@
 
 ### Stuck
 - No new blockers.
+
+## 2026-04-12 12:53 PM CDT
+### Done
+- Re-read `CODEX_SPEC.md` Phase 2 vision update and implemented schema-first prep for the data moat path.
+- Added Phase 2 Supabase tables to `supabase/schema.sql` (empty-by-default scaffolding):
+  - `programs`, `coaches`, `hs_players`, `program_needs`, `commitments`, `showcases`, `showcase_outcomes`
+- Added `lib/phase2-context.ts` to opportunistically query Phase 2 tables and return structured status + sample rows.
+- Wired report generation to use Phase 2 context when available:
+  - `app/api/generate-report/route.ts` now loads context from Supabase before GPT call.
+  - `lib/openai.ts` now blends data-aware guidance when tables have rows and falls back to generalized recruiting heuristics when empty/missing.
+- Updated docs (`README.md`, `DECISIONS.md`) to capture the Phase 2 migration path and behavior.
+
+### Next
+- Run lint/build validation.
+- Commit Phase 2 prep changes.
+- Deploy to Vercel production and re-run live smoke checks on `commitrecruit.com`.
+
+### Stuck
+- No new blockers; existing Supabase credential blocker still applies for direct schema push.
+
+## 2026-04-12 01:02 PM CDT
+### Done
+- Ran Codex review gate on the Phase 2 update batch and addressed findings:
+  - Added explicit Supabase insert error handling for `demo_reports` persistence.
+  - Updated optional text normalization to avoid silent coercion edge cases.
+  - Parallelized Phase 2 context table reads to reduce per-request latency.
+  - Added 400 response handling for malformed JSON bodies on `/api/generate-report`.
+- Re-ran `npm run lint` and `npm run build` after each patch set; both pass.
+
+### Next
+- Commit this Phase 2 + hardening batch.
+- Deploy to Vercel production.
+- Execute live smoke checks against `commitrecruit.com` endpoints.
+
+### Stuck
+- No new blockers; existing Supabase credential blocker remains unchanged.

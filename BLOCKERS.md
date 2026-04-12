@@ -16,6 +16,7 @@
 - Waitlist API now falls back to an existing Supabase table (`sashanoire_subscribers`) if `waitlist` table is missing.
 - Admin waitlist count/list/export consume the same fallback path, so the MVP remains operational end-to-end.
 - Demo report persistence remains optional per spec; report generation still works live.
+- Phase 2 moat tables are now defined in `supabase/schema.sql` and report generation is already wired to use them opportunistically when data exists. Until DB creds are fixed, those tables cannot be created/populated in the live project.
 
 ### Follow-up after MVP ship
 - Fix or rotate `SUPABASE_DB_URL` credentials, then run `supabase/schema.sql`.
