@@ -40,12 +40,34 @@ type ProgramItem = {
   created_at: string;
 };
 
+type QueryError = {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+} | null;
+
 function formatDate(value: string) {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
     return value;
   }
   return parsed.toLocaleString();
+}
+
+function tableErrorMessage(error: QueryError) {
+  if (!error) {
+    return null;
+  }
+
+  if (
+    relationMissing(error.code) ||
+    relationMissing(error.message) ||
+    relationMissing(error.details)
+  ) {
+    return null;
+  }
+
+  return error.message ?? "Unknown query error.";
 }
 
 export default async function AdminPage() {
@@ -82,28 +104,20 @@ export default async function AdminPage() {
     getRecentPrograms(supabase, 10),
   ]);
 
-  const demoCount = demoCountResult.error
-    ? relationMissing(demoCountResult.error.message)
-      ? 0
-      : 0
-    : (demoCountResult.count ?? 0);
+  const demoCountError = tableErrorMessage(demoCountResult.error);
+  const demoRowsError = tableErrorMessage(demoRowsResult.error);
+  const demoError = demoCountError ?? demoRowsError;
 
-  const demoRows = demoRowsResult.error
-    ? relationMissing(demoRowsResult.error.message)
-      ? []
-      : []
-    : ((demoRowsResult.data ?? []) as DemoItem[]);
+  const programsCountError = tableErrorMessage(programsCountResult.error);
+  const programsRowsError = tableErrorMessage(programsRowsResult.error);
+  const programsError = programsCountError ?? programsRowsError;
 
-  const programsCount = programsCountResult.error
-    ? relationMissing(programsCountResult.error.message)
-      ? 0
-      : 0
-    : (programsCountResult.count ?? 0);
+  const demoCount = demoCountError ? 0 : (demoCountResult.count ?? 0);
+  const demoRows = demoRowsError ? [] : ((demoRowsResult.data ?? []) as DemoItem[]);
 
-  const programsRows = programsRowsResult.error
-    ? relationMissing(programsRowsResult.error.message)
-      ? []
-      : []
+  const programsCount = programsCountError ? 0 : (programsCountResult.count ?? 0);
+  const programsRows = programsRowsError
+    ? []
     : ((programsRowsResult.data ?? []) as ProgramItem[]);
 
   return (
@@ -134,6 +148,11 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             <p className="font-heading text-4xl text-foreground">{demoCount ?? 0}</p>
+            {demoError ? (
+              <p className="mt-2 text-xs text-destructive">
+                Error loading demo metrics: {demoError}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
         <Card>
@@ -142,6 +161,11 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             <p className="font-heading text-4xl text-foreground">{programsCount}</p>
+            {programsError ? (
+              <p className="mt-2 text-xs text-destructive">
+                Error loading school metrics: {programsError}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       </div>
@@ -198,7 +222,13 @@ export default async function AdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {demoRows.length === 0 ? (
+                {demoError ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-destructive">
+                      Error loading recent reports: {demoError}
+                    </TableCell>
+                  </TableRow>
+                ) : demoRows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
                       No reports generated yet.
@@ -235,7 +265,13 @@ export default async function AdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {programsRows.length === 0 ? (
+                {programsError ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-destructive">
+                      Error loading schools: {programsError}
+                    </TableCell>
+                  </TableRow>
+                ) : programsRows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground">
                       No schools loaded yet.

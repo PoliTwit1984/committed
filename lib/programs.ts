@@ -29,8 +29,7 @@ export function relationMissing(messageOrCode?: string | null) {
   return (
     normalized.includes("42p01") ||
     normalized.includes("could not find the table") ||
-    normalized.includes("relation") ||
-    normalized.includes("does not exist")
+    /relation\s+["'][^"']+["']\s+does not exist/.test(normalized)
   );
 }
 
@@ -42,9 +41,15 @@ function nullIfEmpty(value?: string | null) {
 }
 
 export function toProgramInsertRow(program: ProgramInput) {
+  const normalizedLocation = [program.city, program.state]
+    .map((part) => normalizeProgramName(part ?? ""))
+    .filter(Boolean)
+    .join("|");
+
   return {
     name: program.name.trim(),
-    normalized_name: normalizeProgramName(program.name),
+    // Use name + location so same-named schools in different states don't collide.
+    normalized_name: `${normalizeProgramName(program.name)}|${normalizedLocation}`,
     division: nullIfEmpty(program.division),
     conference: nullIfEmpty(program.conference),
     city: nullIfEmpty(program.city),
