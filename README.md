@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Commit Baseball MVP
 
-## Getting Started
+AI recruiting intelligence MVP for high school baseball families.
 
-First, run the development server:
+This app ships:
+- Marketing landing page + waitlist capture (`/`)
+- Demo report generator powered by GPT-4o (`/demo`)
+- Password-protected admin dashboard + CSV export (`/admin`, `/api/admin/export`)
 
+## Stack
+- Next.js 15 (App Router), TypeScript, Tailwind CSS v4
+- shadcn/ui components
+- react-hook-form + zod validation
+- Supabase (primary persistence)
+- OpenAI (`gpt-4o`) for report generation
+- Resend for confirmation emails
+- Vercel Analytics + custom event tracking (`waitlist_form_started`, `waitlist_form_completed`, `demo_form_started`, `demo_report_generated`)
+
+## Local Setup
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Export environment variables from the shared keys file before running:
+```bash
+set -a
+source ~/.luna/secrets/keys.env
+set +a
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Start the app:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run checks:
+```bash
+npm run lint
+npm run build
+```
 
-## Learn More
+## Environment Variables
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENAI_API_KEY`
+- `RESEND_API_KEY`
+- `ADMIN_PASSWORD_COMMIT` (used by middleware for `/admin` and `/api/admin/*`)
 
-To learn more about Next.js, take a look at the following resources:
+Optional:
+- `RESEND_FROM` (default is `onboarding@resend.dev`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture
+- `app/page.tsx`: Landing page + trust-driven recruiting copy + waitlist CTA
+- `components/waitlist-form.tsx`: client form + thank-you state with queue position
+- `app/api/waitlist/route.ts`: validation, Supabase write, Resend confirmation
+- `app/demo/page.tsx` + `components/demo-form.tsx`: demo UI and report rendering
+- `app/api/generate-report/route.ts`: GPT-4o call and optional report persistence
+- `app/admin/page.tsx`: dashboard metrics + recent records
+- `app/api/admin/export/route.ts`: CSV export endpoint
+- `middleware.ts`: basic auth gate for admin routes (`admin:<ADMIN_PASSWORD_COMMIT>`)
+- `supabase/schema.sql`: canonical table schema for `waitlist` and `demo_reports`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What Was Built
+- Full landing page sections requested in spec (problem/solution/how it works/sample report/pricing)
+- End-to-end waitlist submission with queue number response
+- Confirmation email support via Resend
+- Demo report generator with 30-60 second style loading progression
+- Admin dashboard with counts, recent rows, and CSV export
+- Domain-ready deployment config process for `commitrecruit.com` + `www.commitrecruit.com`
 
-## Deploy on Vercel
+## What Was Skipped (and Why)
+- Direct table migration to create `waitlist` and `demo_reports` is blocked by current `SUPABASE_DB_URL` auth failure (`Tenant or user not found`).
+- To keep MVP shippable, waitlist persistence falls back to an existing Supabase table (`sashanoire_subscribers`) when `waitlist` is absent. Admin waitlist views/CSV use the same fallback path.
+- Demo report persistence remains optional per spec; it is attempted, but silently tolerated if `demo_reports` is missing.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Resend Migration Note
+- Current from-address is `onboarding@resend.dev` for reliable MVP transactional delivery.
+- Migrate to `hello@commitrecruit.com` once Resend domain verification/billing supports the production domain.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy (Production)
+```bash
+vercel --prod
+```
+
+After deploy, add domains:
+```bash
+vercel domains add commitrecruit.com
+vercel domains add www.commitrecruit.com
+```
+
+## API Smoke Tests Used
+```bash
+curl -X POST http://localhost:4100/api/waitlist -H 'Content-Type: application/json' -d '{"email":"test@example.com","phone":"555-010-0000","playerName":"Jake Thompson","gradYear":"2027","position":"OF","referrer":"local-test"}'
+
+curl -X POST http://localhost:4100/api/generate-report -H 'Content-Type: application/json' -d '{"playerName":"Jake Thompson","gradYear":"2027","position":"OF","battingAverage":".351","videoLink":"https://www.youtube.com/watch?v=dQw4w9WgXcQ","targetSchools":"Samford, Missouri State"}'
+
+curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/admin
+curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/api/admin/export
+```
