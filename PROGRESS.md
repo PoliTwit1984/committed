@@ -53,3 +53,24 @@
 
 ### Stuck
 - Same Supabase schema blocker remains (table creation path blocked by DB URL auth).
+
+## 2026-04-12 12:12 PM CDT
+### Done
+- Deployed production build to Vercel.
+- Added domains:
+  - `commitrecruit.com`
+  - `www.commitrecruit.com`
+- Verified live routes:
+  - `GET https://commitrecruit.com/` → 200
+  - `GET https://commitrecruit.com/demo` → 200
+  - `GET https://commitrecruit.com/admin` → 401 without auth
+  - `GET https://commitrecruit.com/admin` with `admin:$ADMIN_PASSWORD_COMMIT` → 200
+  - `POST https://commitrecruit.com/api/waitlist` → success with queue position
+  - `POST https://commitrecruit.com/api/generate-report` → success with 3 recommendations
+  - `GET https://commitrecruit.com/api/admin/export` with auth → CSV output
+
+### Next
+- Final summary handoff.
+
+### Stuck
+- No new blockers. Existing Supabase schema blocker remains documented and mitigated.
