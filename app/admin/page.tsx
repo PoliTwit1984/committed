@@ -4,6 +4,14 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 import { hasSupabaseServerEnv } from "@/lib/env";
 import { getRecentWaitlistRows, getWaitlistCount } from "@/lib/waitlist-store";
 import { getProgramsCount, getRecentPrograms, relationMissing } from "@/lib/programs";
+import {
+  getProgramDataFreshness,
+  getLatestProgramRefreshRun,
+  getProgramRefreshHealth,
+  isMissingProgramSyncTable,
+  type ProgramRefreshRun,
+} from "@/lib/program-sync";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -37,6 +45,11 @@ type ProgramItem = {
   conference: string | null;
   city: string | null;
   state: string | null;
+  created_at: string;
+};
+
+type ProgramTimestampRow = {
+  updated_at: string | null;
   created_at: string;
 };
 
@@ -91,6 +104,9 @@ export default async function AdminPage() {
     demoRowsResult,
     programsCountResult,
     programsRowsResult,
+    syncRunResult,
+    latestProgramTimestampResult,
+    websiteCountResult,
   ] = await Promise.all([
     getWaitlistCount(supabase),
     getRecentWaitlistRows(supabase, 20),
@@ -102,6 +118,18 @@ export default async function AdminPage() {
       .limit(10),
     getProgramsCount(supabase),
     getRecentPrograms(supabase, 10),
+    getLatestProgramRefreshRun(supabase),
+    supabase
+      .from("programs")
+      .select("updated_at,created_at")
+      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("programs")
+      .select("id", { count: "exact", head: true })
+      .not("website", "is", null),
   ]);
 
   const demoCountError = tableErrorMessage(demoCountResult.error);
@@ -120,6 +148,37 @@ export default async function AdminPage() {
     ? []
     : ((programsRowsResult.data ?? []) as ProgramItem[]);
 
+  let syncRun: ProgramRefreshRun | null = null;
+  let syncErrorMessage: string | null = null;
+  let latestProgramTimestamp: string | null = null;
+  if (syncRunResult.error) {
+    if (!isMissingProgramSyncTable(syncRunResult.error)) {
+      syncErrorMessage = syncRunResult.error.message ?? "Unknown sync status error.";
+    }
+  } else {
+    syncRun = (syncRunResult.data as ProgramRefreshRun | null) ?? null;
+  }
+
+  if (!latestProgramTimestampResult.error) {
+    const programTimestamp =
+      (latestProgramTimestampResult.data as ProgramTimestampRow | null) ?? null;
+    latestProgramTimestamp = programTimestamp?.updated_at ?? programTimestamp?.created_at ?? null;
+  }
+
+  const syncHealth = syncRun
+    ? getProgramRefreshHealth(syncRun)
+    : getProgramDataFreshness(latestProgramTimestamp);
+  const syncVariant =
+    syncHealth.status === "failed"
+      ? "destructive"
+      : syncHealth.status === "stale"
+        ? "secondary"
+        : "default";
+  const lastSyncAt = syncRun
+    ? syncRun.completed_at ?? syncRun.started_at ?? syncRun.created_at ?? null
+    : latestProgramTimestamp;
+  const websiteCount = websiteCountResult.error ? "—" : (websiteCountResult.count ?? 0);
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -133,7 +192,7 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-6 grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-primary">Waitlist signups</CardTitle>
@@ -164,6 +223,37 @@ export default async function AdminPage() {
             {programsError ? (
               <p className="mt-2 text-xs text-destructive">
                 Error loading school metrics: {programsError}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-primary">Program sync</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Badge variant={syncVariant}>{syncHealth.label}</Badge>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Last refresh: {lastSyncAt ? formatDate(lastSyncAt) : "—"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Trigger: {syncRun?.trigger ?? "programs-table-fallback"} • Started by:{" "}
+              {syncRun?.started_by ?? "system"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Websites mapped: {syncRun?.website_count ?? websiteCount}
+            </p>
+            {syncRun?.status === "failed" && syncRun.error_message ? (
+              <p className="mt-2 text-xs text-destructive">{syncRun.error_message}</p>
+            ) : null}
+            {!syncRun ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Using `programs.updated_at` fallback because refresh run logs are not available yet.
+              </p>
+            ) : null}
+            {syncErrorMessage ? (
+              <p className="mt-2 text-xs text-destructive">
+                Could not load sync status: {syncErrorMessage}
               </p>
             ) : null}
           </CardContent>

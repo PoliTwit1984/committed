@@ -63,6 +63,12 @@ export default function Home() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </a>
                 <Link
+                  href="/programs"
+                  className="inline-flex items-center rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-primary transition hover:bg-muted"
+                >
+                  Browse programs
+                </Link>
+                <Link
                   href="/demo"
                   className="inline-flex items-center rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-primary transition hover:bg-muted"
                 >
@@ -172,6 +178,9 @@ export default function Home() {
           <div className="flex gap-4">
             <Link href="/demo" className="hover:text-primary">
               Demo report
+            </Link>
+            <Link href="/programs" className="hover:text-primary">
+              Program explorer
             </Link>
             <a href="#waitlist" className="hover:text-primary">
               Waitlist

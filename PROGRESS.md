@@ -1,5 +1,45 @@
 # Progress Log
 
+## 2026-04-13 08:30 AM CDT
+
+### Done
+
+- Implemented production-grade full loader at `scripts/load-baseball-programs.mjs`:
+  - Pulls NCAA D1/D2/D3, NAIA, and JUCO listings from The Baseball Cube.
+  - Resolves JUCO divisions from program profile pages and keeps only JUCO D1/D2.
+  - Enriches every program with profile-level data (conference normalization, coach extraction, etc.).
+  - Enriches websites using NCAA directory API first, then fallback web discovery for remaining missing sites.
+  - Upserts all programs by `normalized_name`.
+  - Rebuilds current head coaches in `coaches` (1 head coach per program from source feed).
+- Added npm command:
+  - `npm run load:programs`
+- Added nightly automation:
+  - `.github/workflows/nightly-program-refresh.yml`
+  - Scheduled daily run with manual `workflow_dispatch` support.
+- Executed full refresh successfully against production Supabase:
+  - Programs loaded: `1442`
+  - Division counts:
+    - D1: `308`
+    - D2: `256`
+    - D3: `374`
+    - NAIA: `188`
+    - JUCO D1: `156`
+    - JUCO D2: `160`
+  - Programs with websites: `719`
+  - Head coaches synced: `1442`
+- Verified live admin endpoint:
+  - `GET https://commitrecruit.com/api/admin/programs` returns `totalPrograms: 1442`.
+
+### Next
+
+- Add richer program profile persistence (ballpark, drafted players, major leaguers, twitter) once schema columns/table are finalized.
+- Tune fallback website discovery to reduce retry noise and increase NAIA/JUCO hit rate.
+- Add per-run import metrics logging (duration, discovered websites, failures) for easier operations monitoring.
+
+### Stuck
+
+- No blocking issues. Some fallback website discovery queries are rate-limited/noisy for certain schools but import completes successfully.
+
 ## 2026-04-12 12:06 PM CDT
 
 ### Done

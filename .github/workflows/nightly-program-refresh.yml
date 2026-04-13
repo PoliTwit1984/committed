@@ -1,0 +1,39 @@
+name: Nightly Program Refresh
+
+on:
+  schedule:
+    # 10:15 UTC ~= 5:15 AM America/Chicago (CST) / 4:15 AM (CDT)
+    - cron: "15 10 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PROGRAM_FETCH_TIMEOUT_MS: "25000"
+      PROFILE_CONCURRENCY: "14"
+      WEBSITE_DISCOVERY_MAX: "200"
+      WEBSITE_DISCOVERY_CONCURRENCY: "6"
+      ENABLE_WEBSITE_DISCOVERY: "true"
+      ENABLE_DATABASE_QUALITY_PASS: "true"
+      PROGRAM_REFRESH_TRIGGER: "github-schedule"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.0"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Refresh programs + coaches
+        run: npm run load:programs

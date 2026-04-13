@@ -62,6 +62,8 @@ Optional:
 - `app/api/admin/export/route.ts`: CSV export endpoint
 - `app/api/admin/programs/route.ts`: schools API (GET list/count + POST bulk upsert)
 - `app/api/admin/programs/seed/route.ts`: one-click starter school seed (D1/D2/D3/NAIA/JUCO sample set)
+- `scripts/load-baseball-programs.mjs`: full schools loader (D1/D2/D3/NAIA/JUCO D1/D2) with profile enrichment + coach sync
+- `.github/workflows/nightly-program-refresh.yml`: nightly automated refresh job
 - `middleware.ts`: basic auth gate for admin routes (`admin:<ADMIN_PASSWORD_COMMIT>`)
 - `supabase/schema.sql`: canonical table schema for `waitlist` and `demo_reports`
   plus Phase 2-ready empty tables: `programs`, `coaches`, `program_needs`, `commitments`, `showcases`, `showcase_outcomes`, `hs_players`
@@ -93,6 +95,11 @@ Optional:
   - `POST /api/admin/programs` imports custom schools in bulk.
   - `GET /api/admin/programs` returns current schools + count for verification.
   - Admin dashboard now shows school count and recent schools.
+  - `npm run load:programs` runs full baseball load from The Baseball Cube:
+    - NCAA D1/D2/D3 + NAIA + JUCO (filtered to JUCO D1/D2 from program pages)
+    - Current head coach sync into `coaches`
+    - Website enrichment from NCAA directory + fallback search
+  - Nightly refresh is configured in GitHub Actions (`Nightly Program Refresh` workflow).
 
 ## Deploy (Production)
 ```bash
@@ -115,4 +122,14 @@ curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/admin
 curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/api/admin/export
 curl -u "admin:$ADMIN_PASSWORD_COMMIT" -X POST http://localhost:4100/api/admin/programs/seed
 curl -u "admin:$ADMIN_PASSWORD_COMMIT" http://localhost:4100/api/admin/programs
+npm run load:programs
 ```
+
+## Nightly Refresh Setup
+Set these repo secrets in GitHub for the workflow:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Optional runtime tuning:
+- `WEBSITE_DISCOVERY_MAX` (default workflow value: `200`)
+- `ENABLE_WEBSITE_DISCOVERY` (`true`/`false`)
