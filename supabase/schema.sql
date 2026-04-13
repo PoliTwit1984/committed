@@ -53,8 +53,7 @@ create table if not exists public.programs (
 );
 
 create unique index if not exists programs_normalized_name_uq
-  on public.programs (normalized_name)
-  where normalized_name is not null;
+  on public.programs (normalized_name);
 create index if not exists programs_division_idx on public.programs (division);
 create index if not exists programs_conference_idx on public.programs (conference);
 
