@@ -95,3 +95,23 @@
 ### Immediate unblock needed
 
 - Fresh working Postgres connection string for this Supabase project, or equivalent direct SQL credential path.
+
+## 2026-04-21 — RESOLVED: schema applied; new issue uncovered (project mismatch)
+
+### Resolution of SQL blocker
+
+- Schema from `supabase/schema.sql` was applied cleanly against the real commit Supabase project `cdmulguhddxjrzjtjqol` (us-east-2) on 2026-04-21.
+- All 14 tables present with RLS enabled. Existing program/coach data preserved (1,442 programs, 1,415 coaches, 998 social accounts, 388 social posts, 1 commitment, 11 refresh runs).
+- Root cause of prior `Tenant or user not found` failure: `SUPABASE_DB_URL` was pointed at a LunaOS project (`ykbazffnruyitblyxyog`-era secrets), not at the actual commit project.
+
+### New issue: Vercel production pointing at wrong database
+
+- `commit-baseball/app/.env.vercel.prod` contains LunaOS Supabase keys, not commit's.
+- Consequence: waitlist signups have been writing to LunaOS `sashanoire_subscribers` fallback table, while the nightly loader writes programs to `cdmulguhddxjrzjtjqol` via GitHub Actions secrets. Split-brain.
+
+### Required actions
+
+1. Export existing waitlist rows from LunaOS `sashanoire_subscribers` (filter to commit-origin rows by referrer/date) and any LunaOS `demo_reports` rows.
+2. Insert into `cdmulguhddxjrzjtjqol.public.waitlist` / `public.demo_reports` using canonical columns.
+3. Update Vercel Production + Preview env vars to commit's project: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`.
+4. Redeploy and verify `/api/waitlist` reports `storageMode: canonical` (not `fallback`).
