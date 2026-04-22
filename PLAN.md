@@ -81,9 +81,36 @@ Model: **calendar-anchored, readiness-gated** — hybrid adopted from industry c
 
 **Caveat:** Specific metric thresholds and NCAA date details in this spec came from an LLM synthesis of training data (not live web research). All numbers and dates must be verified against current NCSA / Perfect Game / Baseball Factory / NCAA published sources before shipping.
 
+## v1 player profile spec (feature #2)
+
+**Scope: full longitudinal.** Shareable public URL deferred to v2+ (only becomes valuable at the 11th-grade-summer hinge).
+
+**Captured at intake (9th grade):**
+- Identity: name, grad year, HS, travel org, parent contact
+- Position(s): primary + secondary
+- Academic track baseline: unweighted GPA, projected rigor, target tier
+
+**Tracked longitudinally (every re-test updates a time-series, never overwrites):**
+- Measurables: 60-yd, exit velo (off tee + BP), throwing velo (by position), C pop time, P fastball velo + secondary pitch grades
+- Academic: GPA per term, SAT/ACT attempts, NCAA core-course progression
+- Stat lines per season (HS + travel) — batting / pitching splits
+- Growth curves rendered per metric (for the "progress story" families + coaches want to see)
+
+**Media:**
+- Video library — practice, game, showcase footage with tags (date, pitch type, at-bat context, radar readings)
+- Highlight reel (auto-generated or curated from library)
+
+**Activity log:**
+- Showcases/camps attended with cost tracking (feeds feature #4 cost/value math)
+- Unofficial/official visits
+- Recommendation letters
+- Injury / workload log (Pitch Smart compliance per USA Baseball age guidelines)
+- Awards / achievements
+
+**Design note:** The profile is the one surface a player touches most often for 4 years — invest in UX that makes metric logging fast (mobile-first, 30 seconds to log a velo reading) or adoption dies.
+
 ## Open questions
 
-- Player profile data model (stats, video, GPA, position, measurements, growth tracking)
 - School-list matching logic + data inputs
 - Showcase/camp directory sourcing + cost-value scoring
 - Education library format (articles / video / drip email / course)
