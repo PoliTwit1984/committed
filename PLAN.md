@@ -48,9 +48,41 @@ All 4 features in v1:
 
 **Pivot in place.** Keep the existing Next.js stack, Supabase, admin, programs DB, and auth. Rewrite senior-year-flavored landing copy and retarget the demo report toward the 4-year journey framing. No full rebuild.
 
+## v1 roadmap spec (feature #1)
+
+Model: **calendar-anchored, readiness-gated** — hybrid adopted from industry convergence (NCSA, Perfect Game, Baseball Factory, SportsRecruits).
+
+**Structure:** 4 grade-year phases × 4 seasonal blocks = **16 checkpoints** per player (9th Fall → 12th Summer).
+
+**Four task types at every checkpoint:**
+1. **Athletic** — training focus + metric retest
+2. **Academic** — GPA target, coursework, NCAA core-course audit
+3. **Exposure** — video, showcase, outreach (NCAA-calendar-gated; no exposure activity before certain dates)
+4. **Pitcher overlay** — Pitch Smart workload compliance (required for any pitcher)
+
+**Intake parameters (collected at 9th-grade onboarding, never fork the roadmap):**
+- Primary position (parameterizes metric targets)
+- Division aspiration (D1 / D2 / D3 / NAIA / JUCO) — parameterizes metric thresholds and exposure intensity
+- Academic profile (baseline GPA, projected rigor)
+
+**Key NCAA dates baked in:**
+- **June 15 after sophomore year** — coach contact unlocks (structural hinge)
+- **Aug 1 before junior year** — official visits allowed
+- NLI signing windows (early Nov, mid-April)
+- Annual dead/quiet/contact/evaluation periods surfaced as reminders
+
+**Phase-gating is readiness-based, not calendar-based alone.** A player doesn't "advance to exposure phase" purely because it's junior fall — they advance when metrics clear a threshold. Calendar sets the earliest date; readiness determines actual progression.
+
+**Concrete checkpoint examples:**
+
+*9th Grade Fall:* capture baseline measurables (60-yd, exit velo, throwing velo, P FB velo) with no targets yet; baseline GPA; foundational strength/mobility; zero exposure activity (no showcases, no outreach); Pitch Smart habit started. Deliverable: baseline report card + individualized winter plan.
+
+*11th Grade Summer (hinge):* tier-appropriate metric targets (e.g., D1 position player ~90+ exit velo, <6.9 60); 1-2 high-leverage showcases (PG National, Area Code, UA); updated highlight + full-game video; active tiered outreach post-June-15 (reach/match/safety); SAT/ACT taken; NCAA Eligibility Center finalized; Pitch Smart peak-workload mgmt for pitchers. Deliverable: commitment-readiness score + 10-15 realistic programs.
+
+**Caveat:** Specific metric thresholds and NCAA date details in this spec came from an LLM synthesis of training data (not live web research). All numbers and dates must be verified against current NCSA / Perfect Game / Baseball Factory / NCAA published sources before shipping.
+
 ## Open questions
 
-- Detailed contents of the 4-year roadmap (milestones per year, task types)
 - Player profile data model (stats, video, GPA, position, measurements, growth tracking)
 - School-list matching logic + data inputs
 - Showcase/camp directory sourcing + cost-value scoring
